@@ -1,12 +1,10 @@
 struct  DSP : public Processor {
-  enum { Threaded = true };
   alwaysinline void step(unsigned clocks);
-  alwaysinline void synchronize_smp();
 
   uint8 read(uint8 addr);
   void write(uint8 addr, uint8 data);
 
-  void enter();
+  void run();
   void power();
   void reset();
 
@@ -24,7 +22,7 @@ private:
     r_efb   = 0x0d, r_pmon  = 0x2d,
     r_non   = 0x3d, r_eon   = 0x4d,
     r_dir   = 0x5d, r_esa   = 0x6d,
-    r_edl   = 0x7d, r_fir   = 0x0f,  //8 coefficients at 0x0f, 0x1f, ... 0x7f
+    r_edl   = 0x7d, r_fir   = 0x0f  //8 coefficients at 0x0f, 0x1f, ... 0x7f
   };
 
   //voice registers
@@ -33,7 +31,7 @@ private:
     v_pitchl = 0x02, v_pitchh = 0x03,
     v_srcn   = 0x04, v_adsr0  = 0x05,
     v_adsr1  = 0x06, v_gain   = 0x07,
-    v_envx   = 0x08, v_outx   = 0x09,
+    v_envx   = 0x08, v_outx   = 0x09
   };
 
   //internal envelope modes
@@ -50,6 +48,8 @@ private:
 
     modulo_array<int, echo_hist_size> echo_hist[2];  //echo history keeps most recent 8 samples
     int echo_hist_pos;
+
+    uint5 sample_stage;
 
     bool every_other_sample;  //toggles every sample
     int kon;                  //KON value when last checked
@@ -165,15 +165,5 @@ private:
   void echo_30();
 
   //dsp
-  static void Enter();
-  void tick();
-
-  friend class DSPDebugger;
+  bool tick();
 };
-
-#if defined(DEBUGGER)
-  #include "debugger/debugger.hpp"
-  extern DSPDebugger dsp;
-#else
-  extern DSP dsp;
-#endif

@@ -15,8 +15,6 @@ namespace SNES {
   project started: 2004-10-14
 */
 
-#include <libco/libco.h>
-
 #include <nall/string.hpp>
 #include <nall/platform.hpp>
 #include <nall/algorithm.hpp>
@@ -35,16 +33,9 @@ namespace SNES {
 #include <nall/utility.hpp>
 #include <nall/varint.hpp>
 #include <nall/vector.hpp>
-#include <nall/gameboy/cartridge.hpp>
 using namespace nall;
 
-#include <gameboy/gameboy.hpp>
-
-#ifdef DEBUGGER
-  #define debugvirtual virtual
-#else
-  #define debugvirtual
-#endif
+#define debugvirtual
 
 namespace SNES {
   typedef int8_t  int8;
@@ -102,36 +93,11 @@ namespace SNES {
   }
 
   struct Processor {
-    cothread_t thread;
-    unsigned frequency;
     int64 clock;
-
-    inline void create(void (*entrypoint)(), unsigned frequency) {
-      if(thread) co_delete(thread);
-      thread = co_create(65536 * sizeof(void*), entrypoint);
-      this->frequency = frequency;
-      clock = 0;
-    }
-
-    inline void serialize(serializer &s) {
-      s.integer(frequency);
-      s.integer(clock);
-    }
-
-    inline Processor() : thread(0) {}
-    inline ~Processor() {
-      if (thread) co_delete(thread);
-    }
-  };
-
-  struct ChipDebugger {
-    virtual bool property(unsigned id, string &name, string &value) = 0;
   };
 
   #include <snes/memory/memory.hpp>
-  #include <snes/cpu/core/core.hpp>
   #include <snes/smp/core/core.hpp>
-  #include <snes/ppu/counter/counter.hpp>
 
   #if defined(PROFILE_ACCURACY)
   #include "profile-accuracy.hpp"
@@ -141,15 +107,10 @@ namespace SNES {
   #include "profile-performance.hpp"
   #endif
 
-  #include <snes/controller/controller.hpp>
   #include <snes/system/system.hpp>
-  #include <snes/chip/chip.hpp>
-  #include <snes/cartridge/cartridge.hpp>
-  #include <snes/cheat/cheat.hpp>
   #include <snes/interface/interface.hpp>
 
   #include <snes/memory/memory-inline.hpp>
-  #include <snes/ppu/counter/counter-inline.hpp>
 }
 
 #undef debugvirtual
